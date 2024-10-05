@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Shelf Visualization</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.125.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.125.2/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({antialias: true});
+            renderer.setClearColor(0xffffff);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Controls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            camera.position.set(2, 2, 3);
+            controls.update();
+
+            // Materials
+            const woodMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513, transparent: true, opacity: 0.8 });
+            const steelMaterial = new THREE.MeshLambertMaterial({ color: 0x808080 });
+
+            // Create wood shelves
+            const shelfGeometry = new THREE.BoxGeometry(1.5, 0.02, 1.2);
+            const shelf1 = new THREE.Mesh(shelfGeometry, woodMaterial);
+            const shelf2 = new THREE.Mesh(shelfGeometry, woodMaterial);
+            const shelf3 = new THREE.Mesh(shelfGeometry, woodMaterial);
+            shelf1.position.set(0, 0.1, 0); // 第一层离地10cm
+            shelf2.position.set(0, 0.9, 0); // 第二层离第一层80cm
+            shelf3.position.set(0, 1.7, 0); // 第三层离第二层80cm
+
+            scene.add(shelf1);
+            scene.add(shelf2);
+            scene.add(shelf3);
+
+            // Create steel frame
+            function addSteelBar(x, y, z, dx, dy, dz) {
+                const barGeometry = new THREE.BoxGeometry(dx, dy, dz);
+                const bar = new THREE.Mesh(barGeometry, steelMaterial);
+                bar.position.set(x, y, z);
+                scene.add(bar);
+            }
+
+            // Vertical bars
+            const verticalHeight = 1.72;
+            addSteelBar(-0.75, verticalHeight / 2, -0.6, 0.05, verticalHeight, 0.05);
+            addSteelBar(-0.75, verticalHeight / 2, 0.6, 0.05, verticalHeight, 0.05);
+            addSteelBar(0.75, verticalHeight / 2, -0.6, 0.05, verticalHeight, 0.05);
+            addSteelBar(0.75, verticalHeight / 2, 0.6, 0.05, verticalHeight, 0.05);
+
+            // Horizontal bars
+            addSteelBar(0, 0.1, -0.6, 1.5, 0.05, 0.05); // 下层前
+            addSteelBar(0, 0.1, 0.6, 1.5, 0.05, 0.05); // 下层后
+            addSteelBar(0, 0.9, -0.6, 1.5, 0.05, 0.05); // 中层前
+            addSteelBar(0, 0.9, 0.6, 1.5, 0.05, 0.05); // 中层后
+            addSteelBar(0, 1.7, -0.6, 1.5, 0.05, 0.05); // 上层前
+            addSteelBar(0, 1.7, 0.6, 1.5, 0.05, 0.05); // 上层后
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 1);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(1, 2, 3);
+            scene.add(ambientLight);
+            scene.add(directionalLight);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        });
+    </script>
+</body>
+</html>
