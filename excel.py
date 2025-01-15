@@ -44,6 +44,46 @@ def pdd_process_spec_and_quantity(row):
 
     spec_code = row["规格编码"]
     quantity = int(row["数量"])
+    # Lanhua gan patterns
+    # DG pattern
+    match = re.search(r"^DG-?6\*(?:13|14)-(\d+)$", spec_code)
+    if match:
+        row["商品名称/简称"] = "6×13兰花干"
+        row["数量"] = quantity * int(match.group(1))
+        return row
+
+    match = re.search(r"^DG6\*10-(\d+)$", spec_code)
+    if match:
+        row["商品名称/简称"] = "6×10兰花干"
+        row["数量"] = quantity * int(match.group(1))
+        return row
+
+    # JHP pattern
+    match = re.search(r"^JHP【6\*10】-(?:06\*(\d+)|(\d+))$", spec_code)
+    if match:
+        row["商品名称/简称"] = "6×10兰花干"
+        number = match.group(1) or match.group(2)
+        if match.group(1):  # If it's in 06*XX format
+            row["数量"] = quantity * (int(number) * 6)
+        else:  # If it's in direct number format
+            row["数量"] = quantity * int(number)
+        return row
+
+    match = re.search(r"^JHP【6\*13】-(?:06\*(\d+)|(\d+))$", spec_code)
+    if match:
+        row["商品名称/简称"] = "6×13兰花干"
+        number = match.group(1) or match.group(2)
+        if match.group(1):  # If it's in 06*XX format
+            row["数量"] = quantity * (int(number) * 6)
+        else:  # If it's in direct number format
+            row["数量"] = quantity * int(number)
+        return row
+
+    # Handle DG-CP-500g pattern
+    if spec_code == "DG-CP-500g":
+        row["商品名称/简称"] = "兰花干边角料500g"
+        return row
+
 
     # \*(\d+)$
     match = re.search(r"\*(\d+).?$", spec_code, re.IGNORECASE)
@@ -247,7 +287,55 @@ def pdd_transform_shipment_data(df: pd.DataFrame) -> pd.DataFrame:
         "油炸腐竹片500g": "油炸切片竹500g",
         "原味腐竹-125g": "小片竹125g",
         "原味腐竹-500g": "小片竹500g",
-        "FZSP-1000G":"腐竹碎片1000g"
+        "FZSP-1000G": "腐竹碎片1000g",
+        "大片油炸腐竹次品500g": "油炸腐竹500g",
+        "YZCP500g": "油炸腐竹500g",
+        "桶装响铃卷": "桶装响铃卷",
+        "响铃卷1桶": "桶装响铃卷",
+        "兰花干边角料200g": "兰花干边角料200g",
+        "兰花干边角料250g": "兰花干边角料250g",
+        "兰花干边角料500g": "兰花干边角料500g",
+        "油炸豆腐条200g": "油炸豆腐条200g",
+        "DG-6*13-24": "6×13兰花干",
+        "DG-CP-500g": "兰花干次品500g",
+        "DG6*10-112": "6×10兰花干",
+        "DG6*10-12": "6×10兰花干",
+        "DG6*10-24": "6×10兰花干",
+        "DG6*10-30": "6×10兰花干",
+        "DG6*14-112": "6×13兰花干",
+        "DG6*14-12": "6×13兰花干",
+        "DG6*14-24": "6×13兰花干",
+        "DG6*14-30": "6×13兰花干",
+        "DG6*14-60": "6×13兰花干",
+        "JHP【6*10】-06*02": "6×10兰花干",
+        "JHP【6*10】-06*04": "6×10兰花干",
+        "JHP【6*10】-06*05": "6×10兰花干",
+        "JHP【6*10】-06*06": "6×10兰花干",
+        "JHP【6*10】-06*10": "6×10兰花干",
+        "JHP【6*10】-06*19": "6×10兰花干",
+        "JHP【6*10】-06*20": "6×10兰花干",
+        "JHP【6*10】-112": "6×10兰花干",
+        "JHP【6*10】-12": "6×10兰花干",
+        "JHP【6*10】-24": "6×10兰花干",
+        "JHP【6*10】-30": "6×10兰花干",
+        "JHP【6*10】-60": "6×10兰花干",
+        "JHP【6*13】-06*02": "6×13兰花干",
+        "JHP【6*13】-06*04": "6×13兰花干",
+        "JHP【6*13】-06*05": "6×13兰花干",
+        "JHP【6*13】-06*06": "6×13兰花干",
+        "JHP【6*13】-06*10": "6×13兰花干",
+        "JHP【6*13】-06*19": "6×13兰花干",
+        "JHP【6*13】-06*20": "6×13兰花干",
+        "JHP-500g": "兰花干次品500g",
+        "PS-1000g": "兰花干次品1000g",
+        "PS-2500g": "兰花干次品2500g",
+        "PS-500g": "兰花干次品500g",
+        "PS-PL-1000g": "兰花干碎品1000g",
+        "PS-PL-2500g": "兰花干碎品2500g",
+        "PS-PL-500g": "兰花干碎品500g",
+        "油炸豆腐条400g*1": "油炸豆腐条400g",
+        "油炸豆腐条400g": "油炸豆腐条400g",
+        
     }
     df["商品名称/简称"] = df["规格编码"].map(product_name_map)
     df.loc[df["店铺名称"] == "桂香园腐竹", "商品名称/简称"] = df.loc[
@@ -628,6 +716,7 @@ def extract_multiple_products_info(cell_content: str) -> List[Tuple[str, int, fl
 suk_mapping = {
     "3盒实惠装【76%选择】": ("腐竹卷100g", "FZJ-100G", 3),
     "方片形500g": ("边角料500g", "BJL-F-500g", 1),
+    "方片形1500g（3袋）": ("边角料500g", "BJL-F-500g", 3),
     "油炸腐竹700g（2包）": ("油炸腐竹350g", "YZ-350G", 2),
     "油炸腐竹1750g（5包）": ("油炸腐竹350g", "YZ-350G", 5),
     "长条形300g": ("边角料300g", "BJL-C-300g", 1),
@@ -829,6 +918,14 @@ suk_mapping = {
     "【尝试】螺蛳粉专用腐竹 * 1斤装": ("切片竹500g", "", 1),
     "原味腐竹*一袋（500g）": ("小片竹500g", "", 1),
     "原味腐竹*两袋（1000g）": ("小片竹500g", "", 2),
+    "大片油炸腐竹20g*6盒": ("油炸腐竹20g", "", 6),
+    "大片油炸腐竹20g*10盒": ("油炸腐竹20g", "", 10),
+    "大片油炸腐竹20g*20盒": ("油炸腐竹20g", "", 20),
+    "大片油炸腐竹20g*30盒": ("油炸腐竹20g", "", 30),
+    "大片油炸腐竹20g*6盒": ("油炸腐竹20g", "", 6),
+    "大片油炸腐竹20g*10盒": ("油炸腐竹20g", "", 10),
+    "大片油炸腐竹20g*20盒": ("油炸腐竹20g", "", 20),
+    "大片油炸腐竹20g*30盒": ("油炸腐竹20g", "", 30),
 }
 
 
@@ -1291,7 +1388,7 @@ def calculate_unit_price_without_shipping(df: pd.DataFrame) -> pd.DataFrame:
 
     # 将涉及的列转换为浮点数类型
     for col in ["实收", "估算快递费", "商品数量"]:
-        filtered_df[col] = pd.to_numeric(filtered_df[col], errors="coerce")
+        filtered_df.loc[:, col] = pd.to_numeric(filtered_df[col], errors="coerce")
 
     # 过滤掉无法转换为数值的行
     filtered_df = filtered_df.dropna(subset=["实收", "估算快递费", "商品数量"])

@@ -318,59 +318,47 @@ def apply_styles_to_worksheet(
         else:
             worksheet.set_column(col_idx, col_idx, style_info.get("width", None))
 
-
 def generate_multi_sheet_excel_response(
     df_list: List[pd.DataFrame],
     sheet_name_list: List[str],
     style_list: List[Dict[str, Any]],
     filename: str,
 ) -> Any:
-    """
-    生成一个包含多个工作表和指定样式的Excel文件作为Flask响应。
+    try:
+        # 检查DataFrame列表、工作表名称列表和样式列表的长度是否相同
+        if len(df_list) != len(sheet_name_list) or len(df_list) != len(style_list):
+            raise ValueError("The lengths of df_list, sheet_name_list, and style_list must be the same.")
 
-    参数:
-    - df_list (List[DataFrame]): 包含多个DataFrame，每个DataFrame为一个工作表。
-    - sheet_name_list (List[str]): 工作表的名称列表。
-    - style_list (List[Dict[str, Any]]): 包含样式信息的字典列表。
-    - filename (str): Excel文件的期望文件名。
+        # 将DataFrame列表转换为一个Excel BytesIO对象
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+            for df, sheet_name, styles in zip(df_list, sheet_name_list, style_list):
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                worksheet = writer.sheets[sheet_name]
+                workbook = writer.book
 
-    返回:
-    - Flask响应对象，其中包含Excel文件。
-    """
-    # 检查DataFrame列表、工作表名称列表和样式列表的长度是否相同
-    if len(df_list) != len(sheet_name_list) or len(df_list) != len(style_list):
-        return (
-            "The lengths of df_list, sheet_name_list, and style_list must be the same.",
-            400,
-        )
+                # 应用第一行的样式
+                apply_styles_to_worksheet(
+                    worksheet, workbook, styles.get("first_row", {}), 0
+                )
 
-    # 将DataFrame列表转换为一个Excel BytesIO对象
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        for df, sheet_name, styles in zip(df_list, sheet_name_list, style_list):
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-            worksheet = writer.sheets[sheet_name]
-            workbook = writer.book
+                # 应用第二行及以下每一行的样式
+                apply_styles_to_worksheet(
+                    worksheet,
+                    workbook,
+                    styles.get("second_row", {}),
+                    1,
+                    apply_to_all_rows=True,
+                )
 
-            # 应用第一行的样式
-            apply_styles_to_worksheet(
-                worksheet, workbook, styles.get("first_row", {}), 0
-            )
+        output.seek(0)
 
-            # 应用第二行及以下每一行的样式
-            apply_styles_to_worksheet(
-                worksheet,
-                workbook,
-                styles.get("second_row", {}),
-                1,
-                apply_to_all_rows=True,
-            )
+        # 返回一个Flask响应
+        return send_file(output, download_name=filename, as_attachment=True)
 
-    output.seek(0)
-
-    # 返回一个Flask响应
-    return send_file(output, download_name=filename, as_attachment=True)
-
+    except Exception as e:
+        logging.error(f"Error in generate_multi_sheet_excel_response: {str(e)}")
+        return f"An error occurred: {str(e)}", 500
 
 def _generate_multi_sheet_excel_response(
     df_list: List[pd.DataFrame], sheet_name_list: List[str], filename: str

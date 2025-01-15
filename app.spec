@@ -15,6 +15,7 @@ a = Analysis(
         'flask',
         'numpy',
         'jinja2.ext',
+        'xlsxwriter',
         'excel',  # 添加你自己的模块
         'style',  # 添加你自己的模块
     ],
