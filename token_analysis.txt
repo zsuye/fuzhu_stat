@@ -1,0 +1,54 @@
+分析文本: 藏神者，凝神也。凝神之要，莫先于澄神；澄神之要，莫先于遣欲。
+
+Token 分析结果:
+--------------------------------------------------
+Token ID: 51466, Text: 藏
+Token ID: 55228, Text: �
+Token ID: 252, Text: �
+Token ID: 30046, Text: 者
+Token ID: 3922, Text: ，
+Token ID: 12870, Text: �
+Token ID: 251, Text: �
+Token ID: 55228, Text: �
+Token ID: 252, Text: �
+Token ID: 75863, Text: 也
+Token ID: 1811, Text: 。
+Token ID: 12870, Text: �
+Token ID: 251, Text: �
+Token ID: 55228, Text: �
+Token ID: 252, Text: �
+Token ID: 55030, Text: 之
+Token ID: 31634, Text: 要
+Token ID: 3922, Text: ，
+Token ID: 164, Text: �
+Token ID: 236, Text: �
+Token ID: 104, Text: �
+Token ID: 61826, Text: 先
+Token ID: 35304, Text: 于
+Token ID: 162, Text: �
+Token ID: 122, Text: �
+Token ID: 226, Text: �
+Token ID: 55228, Text: �
+Token ID: 252, Text: �
+Token ID: 26016, Text: ；
+Token ID: 162, Text: �
+Token ID: 122, Text: �
+Token ID: 226, Text: �
+Token ID: 55228, Text: �
+Token ID: 252, Text: �
+Token ID: 55030, Text: 之
+Token ID: 31634, Text: 要
+Token ID: 3922, Text: ，
+Token ID: 164, Text: �
+Token ID: 236, Text: �
+Token ID: 104, Text: �
+Token ID: 61826, Text: 先
+Token ID: 35304, Text: 于
+Token ID: 30250, Text: �
+Token ID: 96, Text: �
+Token ID: 25340, Text: �
+Token ID: 110, Text: �
+Token ID: 1811, Text: 。
+--------------------------------------------------
+
+总共使用了 47 个 token

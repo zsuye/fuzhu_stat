@@ -69,6 +69,28 @@ def pdd_process_spec_and_quantity(row):
             row["数量"] = quantity * int(number)
         return row
 
+    # JHP【5*12】-06*10
+    match = re.search(r"^JHP【5\*12】-(?:06\*(\d+)|(\d+))$", spec_code)
+    if match:
+        row["商品名称/简称"] = "6×13兰花干"
+        number = match.group(1) or match.group(2)
+        if match.group(1):  # If it's in 06*XX format
+            row["数量"] = quantity * (int(number) * 6)
+        else:  # If it's in direct number format
+            row["数量"] = quantity * int(number)
+        return row
+
+    # JHP【6*8】-06*75  JHP【6*8】-06*22
+    match = re.search(r"^JHP【6\*8】-(?:06\*(\d+)|(\d+))$", spec_code)
+    if match:
+        row["商品名称/简称"] = "6×8兰花干"
+        number = match.group(1) or match.group(2)
+        if match.group(1):  # If it's in 06*XX format
+            row["数量"] = quantity * (int(number) * 6)
+        else:  # If it's in direct number format
+            row["数量"] = quantity * int(number)
+        return row
+
     match = re.search(r"^JHP【6\*13】-(?:06\*(\d+)|(\d+))$", spec_code)
     if match:
         row["商品名称/简称"] = "6×13兰花干"
@@ -83,7 +105,6 @@ def pdd_process_spec_and_quantity(row):
     if spec_code == "DG-CP-500g":
         row["商品名称/简称"] = "兰花干边角料500g"
         return row
-
 
     # \*(\d+)$
     match = re.search(r"\*(\d+).?$", spec_code, re.IGNORECASE)
@@ -145,6 +166,25 @@ def pdd_process_spec_and_quantity(row):
     if re.search(r"方片型边角料,3000克（共6包）", str(row["规格名称"]), re.IGNORECASE):
         row["规格编码"] = "BJL-F-500g"
         row["数量"] = quantity * 6
+        return row
+
+    #   "（独立包装）响铃卷*二十盒（共20卷）": "响铃卷12g",
+    #    "（独立包装）响铃卷*三十盒（30卷）": "响铃卷12g",
+    #    "（独立包装）响铃卷*十盒（共10卷）": "响铃卷12g",
+    if re.search(r"（独立包装）响铃卷\*([十二三]+)盒", str(row["规格名称"]), re.IGNORECASE):
+        # 提取数字部分并转换
+        num_str = re.search(r"（独立包装）响铃卷\*([十二三]+)盒", str(row["规格名称"])).group(1)
+        # 将中文数字转换为阿拉伯数字
+        num_map = {"十": 10, "二十": 20, "三十": 30}
+        num = num_map[num_str]
+        
+        row["规格编码"] = "响铃卷12g"
+        row["数量"] = quantity * num
+        return row
+
+    if re.search(r"响铃卷边角料1.4斤*1（无干燥剂", str(row["规格名称"]), re.IGNORECASE):
+        row["规格编码"] =  "响铃卷边角料750g"
+        row["数量"] = quantity * 1
         return row
 
     return row
@@ -326,6 +366,12 @@ def pdd_transform_shipment_data(df: pd.DataFrame) -> pd.DataFrame:
         "JHP【6*13】-06*10": "6×13兰花干",
         "JHP【6*13】-06*19": "6×13兰花干",
         "JHP【6*13】-06*20": "6×13兰花干",
+        "JHP【5*12】-06*10": "6×13兰花干",
+        "JHP【6*8】-06*13": "6×8兰花干",
+        "JHP【6*8】-06*4": "6×8兰花干",
+        "JHP【6*8】-06*40": "6×8兰花干",
+        "JHP【6*8】-06*75": "6×8兰花干",
+        "JHP【6*8】-06*22": "6×8兰花干", 
         "JHP-500g": "兰花干次品500g",
         "PS-1000g": "兰花干次品1000g",
         "PS-2500g": "兰花干次品2500g",
@@ -335,7 +381,12 @@ def pdd_transform_shipment_data(df: pd.DataFrame) -> pd.DataFrame:
         "PS-PL-500g": "兰花干碎品500g",
         "油炸豆腐条400g*1": "油炸豆腐条400g",
         "油炸豆腐条400g": "油炸豆腐条400g",
-        
+        "（独立包装）响铃卷*二十盒（共20卷）": "响铃卷12g",
+        "（独立包装）响铃卷*三十盒（30卷）": "响铃卷12g",
+        "（独立包装）响铃卷*十盒（共10卷）": "响铃卷12g",
+        "响铃卷12g":"响铃卷12g",
+        "响铃卷边角料1.4斤*1（无干燥剂": "响铃卷边角料750g",
+        "响铃卷边角料750g":"响铃卷边角料750g",
     }
     df["商品名称/简称"] = df["规格编码"].map(product_name_map)
     df.loc[df["店铺名称"] == "桂香园腐竹", "商品名称/简称"] = df.loc[
@@ -925,7 +976,10 @@ suk_mapping = {
     "大片油炸腐竹20g*6盒": ("油炸腐竹20g", "", 6),
     "大片油炸腐竹20g*10盒": ("油炸腐竹20g", "", 10),
     "大片油炸腐竹20g*20盒": ("油炸腐竹20g", "", 20),
-    "大片油炸腐竹20g*30盒": ("油炸腐竹20g", "", 30),
+    "大片油炸腐竹20g*30盒": ("油炸腐竹20g", "", 30), 
+    "（独立包装）响铃卷*二十盒（共20卷）": ("响铃卷12g", "", 20),
+    "（独立包装）响铃卷*三十盒（30卷）": ("响铃卷12g", "", 30),
+    "（独立包装）响铃卷*十盒（共10卷）": ("响铃卷12g", "", 10) 
 }
 
 
