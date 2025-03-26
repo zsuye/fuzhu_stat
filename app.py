@@ -24,12 +24,17 @@ from datetime import datetime
 log_dir = os.path.join(os.path.expanduser("~"), "AppLogs")
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
-log_filename = os.path.join(log_dir, f"app_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+log_filename = os.path.join(
+    log_dir, f"app_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+)
 
 # 配置日志记录
-logging.basicConfig(filename=log_filename,
-                    level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)s %(message)s')
+logging.basicConfig(
+    filename=log_filename,
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+
 
 # 捕获未处理的异常并记录到日志文件
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -37,6 +42,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
     logging.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
 
 sys.excepthook = handle_exception
 
@@ -90,6 +96,7 @@ def save_file_to_temp_dir(file_object) -> List[str]:
 
 jitui_df = pd.read_excel(os.path.join(static_dir, "极兔价格表.xlsx"))
 yuantong_df = pd.read_excel(os.path.join(static_dir, "圆通价格表.xlsx"))
+youzhen_df = pd.read_excel(os.path.join(static_dir, "邮政价格表.xlsx"))
 
 
 @app.route("/fahuobiao", methods=["POST"])
@@ -112,14 +119,14 @@ def fahuobiao():
     fhd = excel.fhd_transform_shipping_data_to_desired_format(fhd)
 
     taobao = excel.tb_process_orders(taobao)
-    taobao.to_excel("taobao.xlsx",index=False)
+    taobao.to_excel("taobao.xlsx", index=False)
 
     all = pd.concat([pdd, fhd, taobao, douyin], ignore_index=True)
     all = all.sort_values(
         by=["日期", "店铺", "规格编码", "商品数量"], ascending=[False, True, True, True]
     )
     all = excel.replace_column_value(all, "规格编码", "未知", "")
-    all = excel.calculate_shipping_costs_for_df(all, jitui_df, yuantong_df)
+    all = excel.calculate_shipping_costs_for_df(all, jitui_df, yuantong_df, youzhen_df)
 
     unit_price = excel.calculate_unit_price_without_shipping(all)
 
@@ -172,7 +179,13 @@ def wangjun_wechat_handle():
     default_path = os.path.join(os.path.expanduser("~"), "Desktop", filename)
 
     # 解析微信信息
-    new_headers = ["收件人姓名（必填）", "收件人手机（二选一）", "收件人电话（二选一）", "收件人地址（必填）", "备注"]
+    new_headers = [
+        "收件人姓名（必填）",
+        "收件人手机（二选一）",
+        "收件人电话（二选一）",
+        "收件人地址（必填）",
+        "备注",
+    ]
     rows = wechat.split("\n")
     data_list = [new_headers]
 
@@ -318,6 +331,7 @@ def apply_styles_to_worksheet(
         else:
             worksheet.set_column(col_idx, col_idx, style_info.get("width", None))
 
+
 def generate_multi_sheet_excel_response(
     df_list: List[pd.DataFrame],
     sheet_name_list: List[str],
@@ -327,7 +341,9 @@ def generate_multi_sheet_excel_response(
     try:
         # 检查DataFrame列表、工作表名称列表和样式列表的长度是否相同
         if len(df_list) != len(sheet_name_list) or len(df_list) != len(style_list):
-            raise ValueError("The lengths of df_list, sheet_name_list, and style_list must be the same.")
+            raise ValueError(
+                "The lengths of df_list, sheet_name_list, and style_list must be the same."
+            )
 
         # 将DataFrame列表转换为一个Excel BytesIO对象
         output = BytesIO()
@@ -359,6 +375,7 @@ def generate_multi_sheet_excel_response(
     except Exception as e:
         logging.error(f"Error in generate_multi_sheet_excel_response: {str(e)}")
         return f"An error occurred: {str(e)}", 500
+
 
 def _generate_multi_sheet_excel_response(
     df_list: List[pd.DataFrame], sheet_name_list: List[str], filename: str

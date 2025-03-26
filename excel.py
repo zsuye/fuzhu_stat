@@ -171,19 +171,23 @@ def pdd_process_spec_and_quantity(row):
     #   "（独立包装）响铃卷*二十盒（共20卷）": "响铃卷12g",
     #    "（独立包装）响铃卷*三十盒（30卷）": "响铃卷12g",
     #    "（独立包装）响铃卷*十盒（共10卷）": "响铃卷12g",
-    if re.search(r"（独立包装）响铃卷\*([十二三]+)盒", str(row["规格名称"]), re.IGNORECASE):
+    if re.search(
+        r"（独立包装）响铃卷\*([十二三]+)盒", str(row["规格名称"]), re.IGNORECASE
+    ):
         # 提取数字部分并转换
-        num_str = re.search(r"（独立包装）响铃卷\*([十二三]+)盒", str(row["规格名称"])).group(1)
+        num_str = re.search(
+            r"（独立包装）响铃卷\*([十二三]+)盒", str(row["规格名称"])
+        ).group(1)
         # 将中文数字转换为阿拉伯数字
         num_map = {"十": 10, "二十": 20, "三十": 30}
         num = num_map[num_str]
-        
+
         row["规格编码"] = "响铃卷12g"
         row["数量"] = quantity * num
         return row
 
     if re.search(r"响铃卷边角料1.4斤*1（无干燥剂", str(row["规格名称"]), re.IGNORECASE):
-        row["规格编码"] =  "响铃卷边角料750g"
+        row["规格编码"] = "响铃卷边角料750g"
         row["数量"] = quantity * 1
         return row
 
@@ -371,7 +375,7 @@ def pdd_transform_shipment_data(df: pd.DataFrame) -> pd.DataFrame:
         "JHP【6*8】-06*4": "6×8兰花干",
         "JHP【6*8】-06*40": "6×8兰花干",
         "JHP【6*8】-06*75": "6×8兰花干",
-        "JHP【6*8】-06*22": "6×8兰花干", 
+        "JHP【6*8】-06*22": "6×8兰花干",
         "JHP-500g": "兰花干次品500g",
         "PS-1000g": "兰花干次品1000g",
         "PS-2500g": "兰花干次品2500g",
@@ -384,9 +388,15 @@ def pdd_transform_shipment_data(df: pd.DataFrame) -> pd.DataFrame:
         "（独立包装）响铃卷*二十盒（共20卷）": "响铃卷12g",
         "（独立包装）响铃卷*三十盒（30卷）": "响铃卷12g",
         "（独立包装）响铃卷*十盒（共10卷）": "响铃卷12g",
-        "响铃卷12g":"响铃卷12g",
+        "响铃卷12g": "响铃卷12g",
         "响铃卷边角料1.4斤*1（无干燥剂": "响铃卷边角料750g",
-        "响铃卷边角料750g":"响铃卷边角料750g",
+        "响铃卷边角料750g": "响铃卷边角料750g",
+        "特级腐竹125g": "小片竹125g",
+        "特级腐竹500g": "小片竹500g",
+        "一级腐竹125g": "条竹125g",
+        "一级腐竹500g": "条竹500g",
+        "腐竹（二指竹）500g": "条竹500g",
+        
     }
     df["商品名称/简称"] = df["规格编码"].map(product_name_map)
     df.loc[df["店铺名称"] == "桂香园腐竹", "商品名称/简称"] = df.loc[
@@ -960,6 +970,7 @@ suk_mapping = {
     "油炸腐竹200g*4": ("油炸腐竹200g", "", 4),
     "油炸腐竹200g*5": ("油炸腐竹200g", "", 5),
     "【尝鲜】腐竹皮边角料500g*1袋": ("腐竹皮500g", "", 1),
+    "【尝鲜】腐竹边角料500g*1包": ("边角料500g", "", 1),
     "【划算】腐竹皮边角料500g*2袋": ("腐竹皮500g", "", 2),
     "【推荐】腐竹皮边角料500g*3袋": ("腐竹皮500g", "", 3),
     "【聚餐】腐竹皮边角料500g*4袋": ("腐竹皮500g", "", 4),
@@ -970,16 +981,22 @@ suk_mapping = {
     "原味腐竹*一袋（500g）": ("小片竹500g", "", 1),
     "原味腐竹*两袋（1000g）": ("小片竹500g", "", 2),
     "大片油炸腐竹20g*6盒": ("油炸腐竹20g", "", 6),
+    "大片油炸腐竹20g*6盒（独立包装）": ("油炸腐竹20g", "", 6),
     "大片油炸腐竹20g*10盒": ("油炸腐竹20g", "", 10),
     "大片油炸腐竹20g*20盒": ("油炸腐竹20g", "", 20),
     "大片油炸腐竹20g*30盒": ("油炸腐竹20g", "", 30),
     "大片油炸腐竹20g*6盒": ("油炸腐竹20g", "", 6),
     "大片油炸腐竹20g*10盒": ("油炸腐竹20g", "", 10),
     "大片油炸腐竹20g*20盒": ("油炸腐竹20g", "", 20),
-    "大片油炸腐竹20g*30盒": ("油炸腐竹20g", "", 30), 
+    "大片油炸腐竹20g*30盒": ("油炸腐竹20g", "", 30),
     "（独立包装）响铃卷*二十盒（共20卷）": ("响铃卷12g", "", 20),
     "（独立包装）响铃卷*三十盒（30卷）": ("响铃卷12g", "", 30),
-    "（独立包装）响铃卷*十盒（共10卷）": ("响铃卷12g", "", 10) 
+    "【推荐】响铃卷*三十盒（30卷）": ("响铃卷12g", "", 30),
+    "（独立包装）响铃卷*十盒（共10卷）": ("响铃卷12g", "", 10),
+    "大片油炸腐竹20g*10盒（独立包装）": ("油炸腐竹20g", "", 10),
+    "大片油炸腐竹20g*20盒（独立包装）": ("油炸腐竹20g", "", 20),
+    "（独立包装）大片油炸腐竹20g*20盒": ("油炸腐竹20g", "", 20),
+    "大片油炸腐竹20g*30盒（独立包装）": ("油炸腐竹20g", "", 30),
 }
 
 
@@ -1270,17 +1287,22 @@ def wangjun_filter_and_select_columns(df: pd.DataFrame) -> pd.DataFrame:
 def calculate_shipping_cost_v3(
     yuantong_df: pd.DataFrame,
     jitui_df: pd.DataFrame,
+    youzhen_df: pd.DataFrame,  # 添加邮政DataFrame参数
     company: str,
     weight: float,
     province: str,
 ) -> Optional[float]:
+    # 选择对应快递公司的价格表
     if "圆通" in str(company):
         df = yuantong_df
     elif "极兔" in str(company):
         df = jitui_df
+    elif "邮政" in str(company):  # 添加邮政选项
+        df = youzhen_df
     else:
         return None
 
+    # 查找目标省份对应的价格行
     province_row = df[df["到达省份"].apply(lambda x: x in province)]
     if province_row.empty:
         return None
@@ -1296,16 +1318,17 @@ def calculate_shipping_cost_v3(
         # 计算每个完整10KG的包裹的运费
         for _ in range(num_full_weights):
             total_cost += calculate_shipping_cost_v3(
-                yuantong_df, jitui_df, company, 10, province
+                yuantong_df, jitui_df, youzhen_df, company, 10, province  # 更新递归调用，添加youzhen_df参数
             )
 
         # 如果有剩余重量，计算剩余重量的运费
         if remaining_weight > 0:
             total_cost += calculate_shipping_cost_v3(
-                yuantong_df, jitui_df, company, remaining_weight, province
+                yuantong_df, jitui_df, youzhen_df, company, remaining_weight, province  # 更新递归调用，添加youzhen_df参数
             )
         return total_cost
 
+    # 根据重量选择对应的价格区间
     weight_categories = [
         ("0-1KG(元）", 1),
         ("1.01-2KG (元）", 2),
@@ -1360,7 +1383,7 @@ def extract_weight_from_name(name: str) -> float:
 
 
 def calculate_shipping_costs_for_df(
-    df: pd.DataFrame, jitui_df, yuantong_df
+    df: pd.DataFrame, jitui_df, yuantong_df,youzhen_df
 ) -> pd.DataFrame:
     """
     Calculate the estimated shipping costs for a DataFrame of shipments.
@@ -1409,7 +1432,7 @@ def calculate_shipping_costs_for_df(
 
         # Calculate shipping cost for one shipment
         cost_per_shipment = calculate_shipping_cost_v3(
-            yuantong_df, jitui_df, company, per_shipment_weight, province
+            yuantong_df, jitui_df,youzhen_df, company, per_shipment_weight, province
         )
 
         # Calculate total shipping cost
